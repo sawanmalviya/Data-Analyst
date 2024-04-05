@@ -1,0 +1,31 @@
+-- Subquery
+-- 1. SCALAR subquery : which return single record(1 row 1 column)
+-- avg salary
+SELECT *
+ FROM empolyee 
+WHERE SALARY > (SELECT avg(salary) from employee);
+
+SELECT *
+ FROM empolyee as e
+ JOIN (SELECT avg(salary) sal from employee) as avgsal
+ON e.salary > avgal.sal
+
+--------------------------
+-- Mutiple row subquery
+1. SUBQUERy which returns mutiple  column and multiple rows
+2. SUBQUERy which returns 1 column and multiple rows
+
+
+1. SUBQUERy which returns mutiple  column and multiple rows
+
+select  dept_id, max(salary)
+from employee
+GROUP_BY
+
+-- Correlated
+Select *
+From department d
+where not exists (SELECT 1 from employee e where e.deptName = d.deptName);
+
+
+--Nested subquery
