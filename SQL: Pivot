@@ -1,0 +1,210 @@
+-- Pivot/ crosstab/case: to transform column data to row data
+-- CROSSTAB need to pass query as string with single ''
+-- Can only have 3 column
+-- 1st column is main column on which data will be grouped
+-- 2nd column on which data is transformed into row lvl to column lvl ... ordering
+-- 3rd column is for aggregation for 2nd column
+-- need to specify output with datatype(as a int, b bigint, c varchar)
+
+
+Select *
+From(
+     SELECT customer_ID as customer,
+     FORMAT(sales_date,'MMM-YY') as sales_date
+     cast(REPLACE(Amount /*CHAR*/,'$' /*SEARCH_STRING*/,'' /*REPLACEMENT_STRING*/)) as int as amount
+) as sales_table
+Pivot(
+        SUM(amount)
+        for sales_date In ([JAN-21],[FEB-21],[MAR-21],[APR-21],
+                            [MAY-21],[JUN-21],[JUL-21],[AUG-21],
+                            [SEP-21],[OCT-21],[NOV-21],[DEC-21])
+) as pivot_table
+
+----
+Select customer_ID as customer,
+TO_CHAR(sales_date,'Mon-YY') as sales_date,
+cast(REPLACE(Amount,'$','')) as int as amount
+FROM sales_data
+GROUP BY customer_ID, TO_CHAR(sales_date,'Mon-YY') as sales_date
+ORDEY BY 1
+
+
+Select *
+FROM crosstab(
+    'Select customer_ID as customer,
+TO_CHAR(sales_date,''Mon-YY'') as sales_date,
+cast(REPLACE(Amount,''$'','')) as int as amount
+FROM sales_data
+GROUP BY customer_ID, TO_CHAR(sales_date,''Mon-YY'') as sales_date
+ORDEY BY 1'
+)
+as (customer varchar,Jan_21 int,Feb_21 int,Mar_21 int,Apr_21 int,
+    May_21 int,Jun_21 int,Jul_21 int,Aug_21 int,
+    Sep_21 int,Oct_21 int,Nov_21 int,Dec_21 int)
+UNION
+Select *
+FROM crosstab(
+    'Select ''total'' as customer,
+TO_CHAR(sales_date,''Mon-YY'') as sales_date,
+cast(REPLACE(Amount,''$'','')) as int as amount
+FROM sales_data
+GROUP BY TO_CHAR(sales_date,''Mon-YY'') as sales_date
+ORDEY BY 1'
+)
+as (customer varchar,Jan_21 int,Feb_21 int,Mar_21 int,Apr_21 int,
+    May_21 int,Jun_21 int,Jul_21 int,Aug_21 int,
+    Sep_21 int,Oct_21 int,Nov_21 int,Dec_21 int)
+    ORDER BY 1;
+    ------
+    With pivot_data as(
+        Select *
+FROM crosstab(
+    'Select customer_ID as customer,
+TO_CHAR(sales_date,''Mon-YY'') as sales_date,
+cast(REPLACE(Amount,''$'','')) as int as amount
+FROM sales_data
+GROUP BY customer_ID, TO_CHAR(sales_date,''Mon-YY'') as sales_date
+ORDEY BY 1'
+)
+as (customer varchar,Jan_21 int,Feb_21 int,Mar_21 int,Apr_21 int,
+    May_21 int,Jun_21 int,Jul_21 int,Aug_21 int,
+    Sep_21 int,Oct_21 int,Nov_21 int,Dec_21 int)
+UNION
+Select *
+FROM crosstab(
+    'Select ''total'' as customer,
+TO_CHAR(sales_date,''Mon-YY'') as sales_date,
+cast(REPLACE(Amount,''$'','')) as int as amount
+FROM sales_data
+GROUP BY TO_CHAR(sales_date,''Mon-YY'') as sales_date
+ORDEY BY 1'
+)
+as (customer varchar,Jan_21 int,Feb_21 int,Mar_21 int,Apr_21 int,
+    May_21 int,Jun_21 int,Jul_21 int,Aug_21 int,
+    Sep_21 int,Oct_21 int,Nov_21 int,Dec_21 int)
+    ORDER BY 1;
+    ),
+    final_data AS(
+        Select customer,
+        COALESCE(Jan-21,0), Jan-21,
+        COALESCE(Feb-21,0), feb-21,
+        COALESCE(Mar-21,0), mar-21,
+        COALESCE(Apr-21,0), apr-21,
+        COALESCE(May-21,0), may-21
+        COALESCE(Jun-21,0), jun-21,
+        COALESCE(Jul-21,0), jul-21,
+        COALESCE(Aug-21,0), aug-21,
+        COALESCE(Sep-21,0), sep-21,
+        COALESCE(Oct-21,0), oct-21,
+        COALESCE(Nov-21,0), nov-21,
+        COALESCE(Dec-21,0), dec-21
+        From pivot_data)
+Select customer,
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+end as total
+from final_total
+
+----
+Select * from sales_data;
+With base_query AS
+(Select customer_id as customer,
+FORMAT(sales_date,'%b-%y') as sales_table,
+REPLACE(Amount,'$','') as amount
+From sales_data)
+Select customer
+, SUM(case when sales_date = 'Jan-21`' then amount else 0 end) as Jan_21
+, SUM(case when sales_date = 'feb-21`' then amount else 0 end) as Feb_21
+, SUM(case when sales_date = 'mar-21`' then amount else 0 end) as mar_21
+, SUM(case when sales_date = 'apr-21`' then amount else 0 end) as Apr_21
+, SUM(case when sales_date = 'may-21`' then amount else 0 end) as May_21
+, SUM(case when sales_date = 'jun-21`' then amount else 0 end) as Jun_21
+, SUM(case when sales_date = 'jul-21`' then amount else 0 end) as Jul_21
+, SUM(case when sales_date = 'aug-21`' then amount else 0 end) as aug_21
+, SUM(case when sales_date = 'sep-21`' then amount else 0 end) as sep_21
+, SUM(case when sales_date = 'oct-21`' then amount else 0 end) as oct_21
+, SUM(case when sales_date = 'nov-21`' then amount else 0 end) as nov_21
+, SUM(case when sales_date = 'dec-21`' then amount else 0 end) as dec_21
+from base_query 
+GROUP BY customer
+UNION
+Select customer,
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+end as total
+from final_total
+
+----
+Select * from sales_data;
+With base_query AS
+(Select customer_id as customer,
+FORMAT(sales_date,'%b-%y') as sales_table,
+REPLACE(Amount,'$','') as amount
+From sales_data)
+Final_data AS
+(Select 'total'customer
+, SUM(case when sales_date = 'Jan-21`' then amount else 0 end) as Jan_21
+, SUM(case when sales_date = 'feb-21`' then amount else 0 end) as Feb_21
+, SUM(case when sales_date = 'mar-21`' then amount else 0 end) as mar_21
+, SUM(case when sales_date = 'apr-21`' then amount else 0 end) as Apr_21
+, SUM(case when sales_date = 'may-21`' then amount else 0 end) as May_21
+, SUM(case when sales_date = 'jun-21`' then amount else 0 end) as Jun_21
+, SUM(case when sales_date = 'jul-21`' then amount else 0 end) as Jul_21
+, SUM(case when sales_date = 'aug-21`' then amount else 0 end) as aug_21
+, SUM(case when sales_date = 'sep-21`' then amount else 0 end) as sep_21
+, SUM(case when sales_date = 'oct-21`' then amount else 0 end) as oct_21
+, SUM(case when sales_date = 'nov-21`' then amount else 0 end) as nov_21
+, SUM(case when sales_date = 'dec-21`' then amount else 0 end) as dec_21
+,sum(amount) as total
+from base_query
+UNION
+Select customer
+, SUM(case when sales_date = 'Jan-21`' then amount else 0 end) as Jan_21
+, SUM(case when sales_date = 'feb-21`' then amount else 0 end) as Feb_21
+, SUM(case when sales_date = 'mar-21`' then amount else 0 end) as mar_21
+, SUM(case when sales_date = 'apr-21`' then amount else 0 end) as Apr_21
+, SUM(case when sales_date = 'may-21`' then amount else 0 end) as May_21
+, SUM(case when sales_date = 'jun-21`' then amount else 0 end) as Jun_21
+, SUM(case when sales_date = 'jul-21`' then amount else 0 end) as Jul_21
+, SUM(case when sales_date = 'aug-21`' then amount else 0 end) as aug_21
+, SUM(case when sales_date = 'sep-21`' then amount else 0 end) as sep_21
+, SUM(case when sales_date = 'oct-21`' then amount else 0 end) as oct_21
+, SUM(case when sales_date = 'nov-21`' then amount else 0 end) as nov_21
+, SUM(case when sales_date = 'dec-21`' then amount else 0 end) as dec_21
+, '' as total
+from base_query)
+
+Select customer,
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+Case when Jan_21 < 0 then '(' || Jan_21 * -1 || ')$' else Jan_21 || '$' end as "Jan-21",
+ from final_data
