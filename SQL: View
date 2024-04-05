@@ -1,0 +1,30 @@
+--VIEW
+-- two main pupose : security and simplify complex query
+we can update view :
+1. view only belong to one table/VIEW
+2.view query does not have DISTINCT CLAUSE
+3. view query does not have GROUP BY CLAUSE
+4. view query does not have with CLAUSE
+5. view query does not have window FUNCTION CLAUSE
+
+-- WIth check option 
+make sure column does not have random ENTRY
+
+CREATE VIEW Apple product AS
+SELECT * from product where product_type = 'Apple'
+with CHECK OPTION;
+
+
+
+
+--------------------------------------------------------------
+--MATERIALIZE VIEW
+-- data base object which stores:
+1. QUERY to fetch DATA
+2. stores data fetch from QUERY
+3. data does not update AUTOMATICALLY
+
+CREATE MATERIALIZED view  random_view AS
+
+-- to refresh MATERIALIZED view
+REFRESH MATERIALIZED view random_view;
