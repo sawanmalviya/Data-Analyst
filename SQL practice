@@ -1,0 +1,49 @@
+-- Joins
+
+--1 INNER JOIN or JOIN
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+INNER JOIN department as dep 
+ON emp.name = dep.name
+ORDERBY DESC;
+
+--2 LEFT JOIN 
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+LEFT JOIN department as dep 
+ON emp.name = dep.name
+ORDERBY DESC;
+
+--3 Right JOIN 
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+RIGHT JOIN department as dep 
+ON emp.name = dep.name
+ORDERBY DESC;
+
+--4  OUTER JOIN or FULL outer JOIN
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+FULL OUTER JOIN department as dep 
+ON emp.name = dep.name
+ORDERBY DESC;
+
+--5  CROSS JOIN (2 row with whole table)
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+CROSS JOIN department as dep 
+ORDERBY DESC;
+
+--6  Natural JOIN (automationally create relation between tables)
+SELECT emp.name, emp.salary, dep.depid
+FROM employee as emp
+NATURAL JOIN department as dep 
+ORDERBY DESC;
+
+--7  self JOIN 
+SELECT emp.name as Employee_Name, emp.salary, man.name as Manager_Name
+FROM employee as emp
+JOIN employee as man 
+ON emp.name = man.name
+ORDERBY DESC;
+
