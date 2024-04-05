@@ -1,0 +1,152 @@
+-- Window --Drop a Function
+-- PARTITION BY
+Select e.*, 
+MAX(salary) over(PARTITION BY dept) as max_salary
+FROM empolyee;
+
+-- ROW_NUMBER()( give sequence no. to each row)
+
+Select e.*, 
+ROW_NUMBER() over(PARTITION BY dept ORDER by emp_id) as RN
+FROM empolyee;
+
+
+SELECT * FROM (
+                Select e.*, 
+                ROW_NUMBER() over(PARTITION BY dept ORDER by emp_id) as RN
+                FROM empolyee as e) x
+where x.RN < 3;
+
+--RANK()(give sequence number to each row, if two values are same next sequence will be skiped ex: 1,2,2,4)
+SELECT * from (
+SELECT e.*,
+RANK() OVER( PARTITION BY dept ORDER BY salary desc) as RNK
+FROM empolyee e) x
+where x.RNK <3;
+
+--DENSE_RANK()(give sequence number to each row, if two values are same next sequence will not be skiped ex: 1,2,2,3)
+SELECT * from (
+SELECT e.*,
+DENSE_RANK() OVER( PARTITION BY dept ORDER BY salary desc) as DENS_RNK
+FROM empolyee e) x
+where x.RNK <3;
+
+-- LAG ()(to compare previous value to current value in row format)
+SELECT e.*
+LAG(salary) OVER(PARTITION BY dept_name ORDER BY emp_id)
+FROM employee e;
+
+SELECT e.*
+LAG(salary,2,0) OVER(PARTITION BY dept_name ORDER BY emp_id)
+FROM employee e;
+-- LEAD ()(to compare NExt value to current value in row format)
+SELECT e.*
+LEAD(salary) OVER(PARTITION BY dept_name ORDER BY emp_id)
+FROM employee e;
+SELECT e.*
+LEAD(salary,3,0) OVER(PARTITION BY dept_name ORDER BY emp_id)
+FROM employee e;
+
+
+-----
+SELECT e.*
+LAG(salary) OVER(PARTITION BY dept_name ORDER BY emp_id),
+CASE WHEN salary >LAG(salary) OVER(PARTITION BY dept_name ORDER BY emp_id) THAN 'salary is higher '
+     WHEN salary <LAG(salary) OVER(PARTITION BY dept_name ORDER BY emp_id) THAN 'salary is Lower '
+    WHEN salary = LAG(salary) OVER(PARTITION BY dept_name ORDER BY emp_id) THAN 'salary is equal '
+    END as 'Salary_compare'
+FROM employee e;
+
+
+
+--WINDOW function part 2
+
+-- FIRST_VALUE() : retrive first record from PARTITION
+SELECT *,
+FIRST_VALUE(PRODUCT_Name) OVER(PARTITION BY Product_category ORDER BY Price DESC ) as MOST_EXP_ PROD
+FROM employee;
+
+-- LAST_VALUE() : retrive last record from PARTITION
+SELECT *,
+LAST_VALUE(PRODUCT_Name) OVER(PARTITION BY Product_category ORDER BY Price DESC ) as MOST_EXP_ PROD
+FROM employee;
+
+
+-- FRAME CLAUSE() : retrive last record from PARTITION
+SELECT *,
+LAST_VALUE(PRODUCT_Name) 
+OVER(PARTITION BY Product_category ORDER BY Price DESC 
+    RANGE BETWEEN UNBOUNDED PRECEDING and CURRENT ROW) -- Default frame for window function (LAST_VALUE and nth value)
+as MOST_EXP_ PROD
+FROM employee;
+
+--modifiction for correct result chancging its range from current row to whole window
+SELECT *,
+LAST_VALUE(PRODUCT_Name) 
+OVER(PARTITION BY Product_category ORDER BY Price DESC 
+    RANGE BETWEEN UNBOUNDED PRECEDING and UNBOUNDED FOLLOWING)
+as MOST_EXP_ PROD
+FROM employee;
+
+SELECT *,
+LAST_VALUE(PRODUCT_Name) 
+OVER(PARTITION BY Product_category ORDER BY Price DESC 
+    RANGE BETWEEN 2 PRECEDING and 2 FOLLOWING)-- 2 uppr row and two below rows total 5rows
+as MOST_EXP_ PROD
+FROM employee;
+
+-- Alternative way when using multiple window function
+SELECT *,
+FIRST_VALUE(PRODUCT_Name) OVER w as MOST_EXP_ PROD,
+LAST_VALUE(PRODUCT_Name) OVER w as LEAST_EXP_ PROD
+FROM employee
+WINDOW w as ( PARTITION BY Product_category ORDER BY Price DESC 
+    RANGE BETWEEN UNBOUNDED PRECEDING and UNBOUNDED FOLLOWING)
+;
+
+--Nth value
+SELECT *,
+FIRST_VALUE(PRODUCT_Name) OVER w as MOST_EXP_ PROD,
+LAST_VALUE(PRODUCT_Name) OVER w as LEAST_EXP_ PROD,
+NTH_VALUE(PRODUCT_Name, 2) OVER w as 2nd_EXP_PROD-- if it is not in range than it will return null
+FROM Product
+WINDOW w as ( PARTITION BY Product_category ORDER BY Price DESC 
+    RANGE BETWEEN UNBOUNDED PRECEDING and UNBOUNDED FOLLOWING)
+;
+
+--Ntile : distriute in form of buckets (try to seprate  equally)
+
+SELECT *
+NTILE(3) OVER(ORDER BY Price DESC) as buckets
+FROM PRODUCT
+WHERE PRODUCT_Name = 'Phones';
+
+SELECT PRODUCT_Name,
+CASE When x.buckets ='1' THan 'Most expensive'
+     When x.buckets ='2' THan '2nd expensive'
+     When x.buckets ='3' THan 'least expensive'
+     END Phone category
+FROM
+(SELECT *
+NTILE(3) OVER(ORDER BY Price DESC) as buckets
+FROM PRODUCT
+WHERE PRODUCT_Name = 'Phones') x
+
+-- CUME_DIST (communilative distriutution) value is BETWEEN 0 to 1
+-- find % of that record compared to all records
+-- formula : current row number/ total row number
+Select PRODUCT_Name, (cum_dis_perc ||'%') as CD_%
+FROM (
+    SELECT *,
+    CUME_DIST() OVER(ORDER BY price DESC) as cum_dis,
+    round(CUME_DIST() OVER(ORDER BY price DESC) :: NUMERIC*100,2) as cum_dis_perc
+FROM Products) x;
+where cum_dis_perc <=30;
+
+-- PERCENTAGE_RANK(): relative rank of current row to total rows
+-- formula (current row -1/ total row-1)
+
+SELECT *,
+PERCENT_RANK() OVER(ORDER BY price) as pe_rank,
+round(PERCENT_RANK() OVER(ORDER BY price) :: NUMERIC*100,2) as pec_rnk
+FROM Product;
