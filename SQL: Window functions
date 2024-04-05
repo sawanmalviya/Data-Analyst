@@ -95,3 +95,76 @@ $$
 -------------------------
 --execution with parameter
 call pr_buy_products('iPad Air', 1)
+
+
+SELECT
+    *,
+    MAX(SALARY) OVER(PARTITION BY DEP ORDER BY SALARY DESC) AS MAX_SALARY,
+    MIN(SALARY) OVER(PARTITION BY DEP ORDER BY SALARY DESC RANGE BETWEEN UNBOUNDED PRECEDING
+    AND UNBOUNDED FOLLOWING)                                AS MIN_SALARY
+FROM
+    EMPLOYEE;
+
+-----------
+SELECT
+    *,
+    COMMULATIVEDISTANCE - LAG(COMMULATIVEDISTANCE, 1, 0) OVER(PARTITION BY CARS ORDER BY DAYS) AS ACTUAL_DISTANCE
+FROM cars;
+
+---------------------------
+with CET AS
+(
+    select *,
+    ROW_NUMBER() over() as ROWNUMBER
+    from distance
+)
+Select startlocation,destinationlocation,distance
+from cte t1
+JOIN cte t2 ON
+t1.ROWNUMBER< t1.ROWNUMBER
+AND t1.startlocation = t2.destinationlocation
+AND t1.destinationlocation= t2.startlocation;
+
+-------------
+SELECT * from travel_items ;
+
+with recursive travel as(
+    SELECT ID, item_name total_count, 1 as level
+    from travel_items
+UNION ALL
+select travel.id, travel.item_name, travel.total_count-1, level +1 as level
+FROM travel
+INNER JOIN  travel t ON 
+t.item_name = travel.item_name AND
+t.id =travel.id
+where trave.total_count> 1
+)
+select id, item_name, LEVEL
+from travel
+
+----------
+-- manager hierch
+select * from emp_details;
+
+with recursive EMPLOYEE as(
+    select * from emp_details where emp = 'Asha'
+    UNION
+    select *.e,
+    FROM EMPLOYEE
+    JOIN emp_details e ON e.managerID = EMPLOYEE.id
+)
+select * from EMPLOYEE                          
+----------------
+-- Difference between avg sales
+with avsale as (
+    SELECTyear_id, month_id, to_char(order_date, 'MON') as mon, avg(sales) as avg_sales_per_month
+    from sales_order s
+    where year_id in(2003,2004)
+    GROUP BY year_id, month_id, to_char(order_date, 'MON'))
+select s1.mon, round(abs(s1.avg_sales_per_month - s2.avg_sales_per_month)::decimal,2)
+as diff
+FROM avsale s1
+JOIN avsale s2
+where s1.year_id= 2003
+AND s1.year_id= 2004
+ORDER BY s1.month_id;
