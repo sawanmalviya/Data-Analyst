@@ -1,0 +1,74 @@
+-- Recursive query
+WITH RECURSIVE cte_name AS (
+    cte_query_definition (the anchor member)
+    UNION ALL
+    cte_query_definition (the recursive member)
+)
+SELECT * FROM cte_name;
+
+WITH RECURSIVE: This clause indicates that we are going to use recursion in our query.
+cte_name (column_name(s)): Here we define the name of our CTE and the names of the columns that it will contain.
+SELECT ... UNION ALL SELECT ...: This is the heart of our recursion. The first SELECT statement is the base case, and the second SELECT statement is the recursive case. UNION ALL is used to combine the results of both.
+FROM cte_name ...: In the recursive SELECT statement, we reference the CTE itself.
+SELECT * FROM cte_name;: Finally, we query the CTE to get our results.
+
+WITH RECURSIVE employee_hierarchy AS (
+    -- Base case
+    SELECT employee_id, employee_name, manager_id
+    FROM employees
+    WHERE manager_id IS NULL
+
+    UNION ALL
+
+    -- Recursive case
+    SELECT e.employee_id, e.employee_name, e.manager_id
+    FROM employees e
+    INNER JOIN employee_hierarchy eh ON e.manager_id = eh.employee_id
+)
+SELECT * FROM employee_hierarchy;
+
+---- print number from 1 to 10
+WITH RECURSIVE numbers as(
+    select 1 as n
+    UNION
+    select n +1 
+    from numbers where n <10
+)
+select * from numbers;
+--------------
+with RECURSIVE employee_hierarchyy as(
+    SELECT id,name,manager_id, designation, 1 as lvl
+    from emp_details where name = 'Asha'
+    UNION
+    Select e.id,name,e.manager_id, e.designation, H.lvl+1 as lvl
+    from employee_hierarchyy H
+    JOIN emp_details e on H.id = e.manager_id
+)
+Select * from employee_hierarchyy;
+----------
+With RECURSIVE emp_hier as (
+    Select id,name,manager_id,designation, 1 as lvl
+    From emp_details where name = 'david'
+    UNION
+    Select E.id, E.name, E.manager_id, E.designation, H.lvl+1 as lvl
+    from emp_hier H
+    JOIN emp_details E ON H.manager_id = E.id
+     )
+Select H2.id as emp_id, H2.name as emp_name, E2.name as manager_name, H2.lvl as LEVEL
+FROM emp_hier H2
+JOIN emp_details E2 ON E2.id = H2.manager_id
+-----
+Q: What is a base case in a recursive SQL query?
+A: A base case in a recursive SQL query is the initial condition that starts the recursion. This could be a simple SELECT statement that fetches specific rows from a table. The base case is executed only once in a recursive query.
+
+Q: How can I prevent infinite loops in recursive queries?
+A: Infinite loops in recursive queries can occur if the recursive part of the query doesn't have a condition that eventually becomes false. To prevent this, ensure that your recursive query has an appropriate condition that stops the recursion after a certain point.
+
+Q: Are recursive queries in SQL efficient?
+A: While recursive queries can solve complex problems and simplify your SQL code, they may not always be the most efficient solution. Depending on the database system, recursive queries can be more resource-intensive than non-recursive solutions, such as joins or subqueries. It's important to analyze and test your queries to ensure they are efficient and meet your needs.
+
+Q: Can all database systems handle recursive queries?
+A: Not all database systems can handle recursive queries. Recursive queries are part of the SQL:1999 standard, but not all systems adhere strictly to this standard. PostgreSQL, SQL Server, and Oracle all support recursive queries. MySQL supports recursive queries as of version 8.0.1. Always check the documentation for your specific database system.
+
+Q: Can I use recursive queries for hierarchical data only?
+A: While recursive queries are typically used for hierarchical data – data that has a parent-child relationship – they are not limited to this type of data. Recursive queries can be used anytime you need to perform a task repeatedly with the result of the previous iteration.
