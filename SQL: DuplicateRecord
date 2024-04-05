@@ -1,0 +1,44 @@
+-- REMOVE duplicate records from table:
+--to find duplicate records select *,count(*) from table GROUP BY Brand,model having count(*)> 1;
+-- by uniquw identifier
+select *,count(*) from table GROUP BY Brand,model having count(*)> 1;
+DELETE from CARS where
+(
+select max(id) from table GROUP BY Brand,model having count(*)> 1
+);
+------
+DELETE from cars where id IN(
+            select d.* from cars c
+            JOIN cars d ON c.brand=d.brand AND c.model = d.model
+            WHERE c.id< d.id
+);
+-- REMOVE duplicate records from table:
+-- using window --Drop a Function
+
+delect fromc cars where id in(
+select id from
+(Select *,
+ROW_NUMBER() OVER (PARTITION BY brand, model) as rn
+from cars) x
+where x.rn> 1)
+-- REMOVE duplicate records from table:
+-- using min Function
+delte from cars wehre id NOT IN(
+select min(id)
+FROM cars
+GROUP BY Model, brand )
+-- REMOVE duplicate records from table:
+-- using backup table
+
+CREATE table cars_bkp
+as
+select * from cars where 1=2;
+
+inset into cars_bkp 
+select * from cars
+where ID in (
+select min(id) from cars
+GROUP BY model,brand
+)
+
+------------
