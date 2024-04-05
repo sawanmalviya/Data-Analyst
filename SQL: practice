@@ -1,0 +1,396 @@
+Aggregate Functions
+Aggregate functions are used to perform calculations on a set of values and return a single result. Some of the most commonly used aggregate functions in SQL include −
+
+COUNT() - Returns the number of rows in a table or the number of non-NULL values in a column
+
+SUM() - Returns the sum of all non-NULL values in a column
+
+AVG() - Returns the average of all non-NULL values in a column
+
+MIN() - Returns the minimum value in a column
+
+MAX() - Returns the maximum value in a column
+
+-> SELECT SUM(total_cost) FROM orders;
+---------
+
+Scalar Functions
+Scalar functions are used to perform calculations on a single value and return a single result. Some examples of scalar functions in SQL include −
+
+LENGTH() - Returns the number of characters in a string
+
+UPPER() - Converts a string to uppercase
+
+LOWER() - Converts a string to lowercase
+
+CONCAT() - Concatenates two or more strings together
+
+ROUND() - Rounds a number to a specified number of decimal places
+
+-> SELECT UPPER(customer_name) FROM customers;
+
+-----------------------
+
+Date and Time Functions
+SQL also provides a number of functions for working with date and time values. Some examples of date and time functions in SQL include −
+
+NOW() - Returns the current date and time
+
+CURRENT_DATE() - Returns the current date
+
+CURRENT_TIME() - Returns the current time
+
+YEAR() - Returns the year of a date
+
+MONTH() - Returns the month of a date
+
+DAY() - Returns the day of a date
+
+-> SELECT NOW();
+-> SELECT MONTH(order_date) FROM orders;
+
+------------------
+
+String Functions
+SQL also provides a number of string manipulation function. Some examples of string functions in SQL include −
+
+LTRIM() - Removes the leading whitespace of the string
+
+RTRIM() - Removes the trailing whitespace of the string
+
+TRIM() - Removes both leading and trailing whitespace of the string
+
+SUBSTRING() - Extracts a specific portion of a string
+
+REPLACE() - Replaces all occurrences of a specified string with another string
+
+Conditional Functions
+SQL also provides a number of functions that perform different actions based on certain conditions. Some examples of conditional functions in SQL include −
+
+CASE - evaluates a list of conditions and returns a result for the first condition that is met
+
+IF - return a specified value if the condition is met, otherwise return another specified value
+
+COALESCE - return the first non-null expression among multiple expressions.
+
+-> SELECT order_id, total_cost,
+   CASE 
+      WHEN total_cost > 100 THEN 'expensive'
+      WHEN total_cost > 50 THEN 'moderately priced'
+      ELSE 'inexpensive'
+   END as "price range"
+FROM orders;
+
+-> SELECT product_name,
+   IF(stock_quantity > 0, 'In Stock', 'Out of Stock') as
+   "Availability"
+FROM products;
+
+-> SELECT customer_name,
+   COALESCE(primary_phone, secondary_phone) as "Phone Number"
+FROM customers;
+------------------
+Logical Functions
+SQL provides a set of logical functions that return a Boolean value, which can be either true or false. Some examples of logical functions in SQL include −
+
+AND - Returns true if both the conditions are true
+
+OR - Returns true if at least one of the conditions is true
+
+NOT - Negates a boolean value
+
+----------------
+Conversion Functions
+SQL provides a number of functions that can be used to convert data from one type to another. Some examples of conversion functions in SQL include −
+
+CAST() - Converts a value from one data type to another
+
+CONVERT() - Converts a value from one data type to another (This function is specific for some database vendors like SQL Server)
+
+TO_DATE() - Converts a string to a date value
+
+TO_TIME() - Converts a string to a time value
+
+TO_TIMESTAMP() - Converts a string to a timestamp value
+
+SELECT CAST(price AS INT) as "Integer Price"
+FROM products;
+
+SELECT TO_DATE(order_date, 'yyyy-mm-dd') as "Formatted Order Date"
+FROM orders;
+-------
+
+Window Functions
+SQL provides a set of functions that can be used to perform calculations across a set of rows that are related to the current row. These functions are known as window functions. Some examples of window functions in SQL include −
+
+RANK() - Assigns a unique rank to each row within a result set, based on the values in one or more columns
+
+DENSE_RANK() - Assigns a unique rank to each row within a result set, based on the values in one or more columns, but does not leave gaps in the ranking sequence when there are ties
+
+ROW_NUMBER() - Assigns a unique number to each row within a result set, based on the order specified in the ORDER BY clause of the function
+
+-> SELECT customer_name, account_balance, RANK() OVER (ORDER BY account_balance DESC) as "Rank"
+FROM customers;
+---------------
+
+
+-- COMMULATIVEDISTANCE to day wise distance
+Select *, 
+(cummulative_distance - (LAG(COMMULATIVEDISTANCE,1,0) OVER(PARTITION BY DAYS)
+) as ACTUAL_DISTANCE
+FROM distance;
+--------------
+--CONCAT
+with CTE as(
+SELECT CONCAT(id,' ',emp) as name,
+NTILE(4) OVER(order BY ID) as bucket
+from emp_input)
+select string_agg(name,',') as final_result
+from cet
+GROUP BY bucket
+ORDER BY 1;
+
+---
+-node (root,inner,LEAF)
+--input
+(   id  p.id
+    1   NULL
+    2   1
+    3   1
+    4   2
+    5   2
+)
+--output
+(   id  p.id
+    1   root
+    2   inner
+    3   leaf
+    4   leaf
+    5   leaf
+)
+
+Select id,
+case when p_id is null then 'Root'
+CASE when p_id is not null AND id IN (select DISTINCT p_id from tree) then 'Inner'
+else 'Leaf'
+END as 'Type'
+FROM tree;
+
+---------------
+-- meaning full words
+SELECT 
+Case when TRANSACTION is null then COMMENT
+else COMMENT
+end as output
+from
+comment&TRANSACTION;
+-------------------
+COALESCE()
+NVL()
+-----
+-- some data in source table some data in target table
+
+select s.id,'Mismatch' as COMMENT
+from SOURCE s
+JOIN TARGET t ON t.id =s.id AND s.name <> t.name
+UNION
+SELECT s.id,'New in Source' as COMMENT
+from SOURCE s
+LEFT JOIN TARGET t ON t.id =s.id AND t.id is NULL
+UNION
+SELECT s.id,'New in Target' as COMMENT
+from SOURCE s
+Right JOIN TARGET t ON t.id =s.id AND s.id is NULL;
+-----------------------
+--IPL match table for single match
+select * 
+From teams team
+join teams opponent ON
+teams.team <> teams.opponent;
+----
+with match as (
+select ROW_NUMBER() OVER(ORDER BY team_name) as ID, team_code, team_name
+from teams t)
+SELECT team.team_name as team, opponent.team as opponent
+From teams team
+JOIN teams opponent where team.id < opponent.id;
+
+--IPL match table for double match
+select * 
+From teams team
+join teams opponent ON
+teams.team <> teams.opponent;
+----
+with match as (
+select ROW_NUMBER() OVER(ORDER BY team_name) as ID, team_code, team_name
+from teams t)
+SELECT team.team_name as team, opponent.team as opponent
+From teams team
+JOIN teams opponent where team.id <> opponent.id;
+
+-------
+SELECT d1.doctors
+FROM doctor d1
+JOIN doctor d2
+ON d1.hospital =d2.hospital AND d1.speciality <>d2.speciality
+
+-----------
+select * from login_details;
+SELECT DISTINCT repeatative_user FROM (SELECT *,
+CASE WHEN user_name = LEAD(user_name) OVER(PARTITION BY user_name ORDER BY login_id)
+AND user_name= LEAD(user_name,2) OVER(PARTITION BY user_name ORDER BY login_id)
+THEN user_name else NULL END as repeatative_user FROM login_details) x WHERE x.repeatative_user is not null;
+select distinct repeated_names from  (select *,
+case when user_name = lead(user_name) over(PARTITION BY user_name order by login_id)
+and  user_name = lead(user_name,2) over(PARTITION BY user_name order by login_id)
+then user_name else null 
+end as repeated_names
+from login_details) x where x.repeated_names is not null;
+
+---------------
+
+select id,city from(
+SELECT *,
+CASE 
+    WHEN 
+    Temprature < 0 AND
+    LEAD(Temprature,1) OVER(ORDER BY id) < 0 AND
+    LEAD(Temprature,2) OVER(ORDER BY id) < 0
+    THEN 'YES'
+        WHEN 
+    Temprature < 0 AND
+    LAG(Temprature,1) OVER(ORDER BY id) < 0 AND
+    LEAD(Temprature,2) OVER(ORDER BY id) < 0
+    THEN 'YES'
+        WHEN 
+    Temprature < 0 AND
+    LAG(Temprature,1) OVER(ORDER BY id) < 0 AND
+    LAG(Temprature,2) OVER(ORDER BY id) < 0
+    THEN 'YES'
+END flags
+FROM weather) x
+WHERE x.Flags = 'Yes';
+
+-------
+with t1 AS
+    (
+    select count(DISTINCT games) total_summer_games
+    from OLYMPICS_HISTORY
+    WHERE season = 'Summer'),
+    t2 AS
+    (
+        SELECT DISTINCT sports, games
+        from OLYMPICS_HISTORY
+    WHERE season = 'Summer' ORDER BY games ),
+    t3 AS
+    (
+     select sport,count(games) as no_of_games
+     from t2
+     GROUP BY sport)
+select * FROM t3
+JOIN t1 ON t1.total_summer_games = t3.no_of_games;
+------------
+--top 5 gold medialist
+
+With t1 AS(
+    SELECT name, count(1) as total_gold_medal
+    FROM OLYMPICS_HISTORY
+    WHERE medal = 'GOLD'
+    GROUP BY name,
+    ORDER BY COUNT(1) DESC),
+    t2 As(
+        Select *, DENSE_RANK() OVER(ORDER BY total_gold_medal DESC) as rnk
+        from t1
+    )
+    select * from t2 
+    where rnk <= 5;
+    -----
+    -- total medal by each country
+Select country,
+COALESCE(Gold,0) as Gold,
+COALESCE(Silver,0) as Silver,
+COALESCE(Broze,0) as Broze 
+FROM crosstab(
+            SELECT nr.region as country,medal, count(1) as total_medals
+            FROM OLYMPICS_HISTORY oh
+            JOIN OLYMPICS_HISTORY_non_region nr ON nr.noc
+            where medal <> ''NA''
+            GROUP BY nr.region, medal,    
+            ORDER BY nr.region,medal,
+            'values(''Broze''),(''Gold''),(''Silver'')')
+    as result(country varchar, Broze bigint, Silver bigint, Gold bigint)
+    ORDER BY Gold DESC, Silver DESC. Broze DESC;
+
+    --------------
+    -- Find Id for which Temprature is greater than previous day Temprature using oracale
+    SELECT w2.ID
+    FROM weather w1
+    JOIN weather w2
+    ON
+    w2.date -1 = w1.date
+    AND w2.temp> w1.temp
+    from weather;
+    ----
+    -- Find Id for which Temprature is greater than previous day Temprature using mysql
+    SELECT w2.ID
+    FROM weather w1
+    JOIN weather w2
+    ON
+    date_sub(w2.date, interval 1 day) = w1.date
+    AND w2.temp> w1.temp
+    from weather;
+    ---
+    -- Find Id for which Temprature is greater than previous day Temprature using mysql server
+    SELECT w2.ID
+    FROM weather w1
+    JOIN weather w2
+    ON
+    date_add(day,-1,w2.date) = w1.date
+    AND w2.temp> w1.temp
+    from weather;
+
+    ----------
+    -- Trip cancellation 
+   WITH DATA AS (
+    SELECT
+        REQUREST_AT,
+        STATUS
+    FROM
+        TRIP
+    WHERE
+        EXISTS(
+            SELECT
+                1
+            FROM
+                USERS U
+            WHERE
+                U.BANNED= 'No'
+                AND U.USER_ID = T.CLIENT_ID
+        )
+        AND EXISTS(
+            SELECT
+                1
+            FROM
+                USERS U
+            WHERE
+                U.BANNED= 'No'
+                AND U.USER_ID = T.DRIVER_ID
+        )
+        AND REQUREST_AT BETWEEN '2023-10-01' AND '2023-10-03'
+),
+total_request as (
+    SELECT request_at, count(1) as no_of_requests
+    From data
+    GROUP BY request_at),
+total_cancels as(
+    SELECT request_at, count(1)- as no_of_cancels
+    FROM data
+    where status IN ('cancelled_by_driver','cancelled_by_client')
+    GROUP BY request_at)
+SELECT tr.request_at as DAY,
+round(COALESCE(tc.no_of_cancels,0)/ tr.no_of_requests,2)
+as 'cancellation Rate'
+FROM total_requests tr 
+LEFT JOIN 
+Total_cancel
+
