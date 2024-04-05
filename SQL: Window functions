@@ -1,0 +1,97 @@
+-- Stored Procedure without parameter
+-- In PostgreSQL
+Cretae or REPLACE PROCEDURE pr_buy_products()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+v_product_code varchar(50);
+v_price float;
+BEGIN
+Select Product_code, price 
+INTO v_product_code, v_price
+From Products
+WHERE product_name = 'Iphone 13 Max';
+
+INSERT INTO sales(order_date, product_name, quantity_ordered, sales_price)
+VALUES(CURRENT_DATE(),v_product_code,1,(v_price*1));
+
+UPDATE INTO product
+SET remaining_quantity = (remaining_quantity-1),
+    sold_quantity = (sold_quantity+1)
+    where product_code= v_product_code;
+    Raise notice 'Product sold!';
+END;
+$$
+
+-------------
+--execution of stored Procedure
+call pr_buy_products()
+----------------------------
+-- In Oracle
+Cretae or REPLACE PROCEDURE pr_buy_products()
+LANGUAGE plpgsql
+AS 
+v_product_code varchar(50);
+v_price float;
+BEGIN
+Select Product_code, price 
+INTO v_product_code, v_price
+From Products
+WHERE product_name = 'Iphone 13 Max';
+
+INSERT INTO sales(order_date, product_name, quantity_ordered, sales_price)
+VALUES(CURRENT_DATE(),v_product_code,1,(v_price*1));
+
+UPDATE INTO product
+SET remaining_quantity = (remaining_quantity-1),
+    sold_quantity = (sold_quantity+1)
+    where product_code= v_product_code;
+    dbms_output_put_line('Product sold!');
+END;
+
+-------------
+--execution of stored Procedure
+
+EXEC pr_buy_products()
+
+
+-- Stored Procedure with parameter
+CREATE or REPLACE PROCEDURE pr_buy_products(p_product_name VARCHAR, p_quantity INT)
+language plpgsql
+AS $$
+DECLARE
+v_product_code VARCHAR(20);
+v_price FLOAT;
+v_cnt int;
+
+BEGIN
+Select count(1)
+INTO v_cnt
+FROM product
+where product_name = p_product_name
+and quantity_remaining> p_quantity;
+
+IF v_cnt>0 THEN
+Select Product_code, price 
+INTO v_product_code, v_price
+From Products
+WHERE product_name = 'Iphone 13 Max';
+
+INSERT INTO sales(order_date, product_name, quantity_ordered, sales_price)
+VALUES(CURRENT_DATE(),v_product_code,p_quantity,(v_price*p_quantity));
+
+UPDATE INTO product
+SET remaining_quantity = (remaining_quantity-p_quantity),
+    sold_quantity = (sold_quantity+p_quantity)
+    where product_code= v_product_code;
+    Raise notice 'Product sold!';
+
+    ELSE
+        Raise notice 'Insuffiuent quantity!';
+    end ELSE
+end;
+$$
+
+-------------------------
+--execution with parameter
+call pr_buy_products('iPad Air', 1)
